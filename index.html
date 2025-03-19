@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini德语学习助手</title>
+  <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@4.0.18/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="header">
+    Gemini德语学习助手
+  </div>
+
+  <div id="layoutContainer">
+    <div id="chatSection">
+      <div id="chatContainer">
+        <div id="chatMessages"></div>
+      </div>
+      <div id="commandButtons">
+        <!-- 按钮将通过 JavaScript 动态添加 -->
+      </div>
+
+      <div class="input-container">
+        <textarea id="userInput" placeholder="在这里输入内容..."></textarea>
+        <span id="microphoneButton" class="microphone-icon"></span>
+        <button id="stopButton" class="stop-button hidden"></button>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+          <button id="sendButton">发送</button>
+          <!-- Scroll To Top & Bottom Buttons -->
+          <button class="scroll-button left" id="scrollTopButton">↑ Top</button>
+          <button class="scroll-button right" id="scrollBottomButton">↓ Bottom</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js" type="module"></script>
+
+</body>
+</html>
