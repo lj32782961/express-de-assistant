@@ -80,6 +80,11 @@ function loadChatHistory() {
     chatHistory.forEach((entry) => {
         const role = entry.role === "user" ? "user" : "ai";
         const text = entry.parts[0].text; // 假设每条消息只有一个 part
+        // 如果是用户消息且包含“<fullcommand>”，跳过显示
+        if (role === "user" && text.includes("<fullcommand>")) {
+            return; // 跳过这条记录
+        }
+        //其他不受影响
         updateChat(role, text);
     });
 
@@ -333,7 +338,7 @@ sendButton.addEventListener('click', async () => {
         let button_label = activeButton.label;
         let symbol = "'"
         // const fullCommand = symbol + userText + symbol + activeButton.content;
-        const fullCommand = `${symbol}${userText}${symbol}${activeButton.content}`;
+        const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
         (async () => {
             userInput.value = ''; // 立即清空
             await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK);
@@ -359,6 +364,13 @@ userInput.addEventListener('keydown', (event) => {
 async function sendMessageToAPI(userinput, message, button_label, Temperature, topP, topK) {
     const userText = userinput.trim();
     updateChat('user', userText)
+
+    // 将用户消息添加到历史记录
+    chatHistory.push({
+        role: "user",
+
+        parts: [{ text: marked.parse("<strong>" + button_label + ": \n\n" + "</strong>" + userText) }]
+    });
 
     // 添加“思考中”的消息
     const tmpMessage = updateChat('ai', '思考中，请等待...');
@@ -403,7 +415,7 @@ async function sendMessageToAPI(userinput, message, button_label, Temperature, t
             const aiMessage = response.text();
             tmpMessage.remove();
             updateChat('ai', aiMessage);
-      
+
             validSchluesselFound = true; // 设置标志位
             return;
         } catch (error) {
@@ -443,7 +455,7 @@ function updateChat(role, text) {
         let html = marked.parse(text);
         message.innerHTML = html;
         // console.log(html);
-
+        saveChatHistory();
         // addPlayButtons(message);//添加语音播放按钮
         addExportButton(message, text); // 添加导出按钮
     } else {
@@ -455,7 +467,7 @@ function updateChat(role, text) {
 
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    saveChatHistory(); // 保存到 localStorage
+    // saveChatHistory(); // 保存到 localStorage
     return message; // 返回创建的 message 元素
 }
 
