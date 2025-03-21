@@ -157,7 +157,7 @@ const commands = [
     {
         label: "清除历史对话",
         content: "清除历史对话",
-        placeholder: "点击下方《发送》按钮确认清除历史对话，并刷新页面",
+        placeholder: "点击下方《发送》按钮确认清除历史对话，并自动刷新页面",
         Temperature: '0.5',// 这里一般是写代码或者问一些一般的问题
         topP: '0.7',
         topK: '30'
@@ -323,20 +323,20 @@ sendButton.addEventListener('click', async () => {
     if (activeButton.content === '清除历史对话') {
         localStorage.clear();
         location.reload(true);
-        console.log("历史对话已删除");
+        alert("历史对话已删除");
     } else {
         if (!userText) {
             alert('请输入内容！');
             userInput.focus();
             return;
         }
-
+        let button_label = activeButton.label;
         let symbol = "'"
         // const fullCommand = symbol + userText + symbol + activeButton.content;
         const fullCommand = `${symbol}${userText}${symbol}${activeButton.content}`;
         (async () => {
             userInput.value = ''; // 立即清空
-            await sendMessageToAPI(userText, fullCommand, Temperature, topP, topK);
+            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK);
         })();
     }
 });
@@ -356,7 +356,7 @@ userInput.addEventListener('keydown', (event) => {
 //     }
 // });
 
-async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
+async function sendMessageToAPI(userinput, message, button_label, Temperature, topP, topK) {
     const userText = userinput.trim();
     updateChat('user', userText)
 
@@ -383,7 +383,7 @@ async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
 
     while (retries > 0 && !validSchluesselFound) {//循环条件
         let retries_no = settings.length - retries + 1;
-        console.log(`第${retries_no}次尝试: `);
+        // console.log(`第${retries_no}次尝试: `);
         try {
             currentIndex = Math.floor(Math.random() * settings.length);
             console.log('current key No.: ', currentIndex);
@@ -391,6 +391,7 @@ async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
 
             const genAI = new GoogleGenerativeAI(Schluessel);
             let model = genAI.getGenerativeModel({ model: model_name });
+            // console.log(chatHistory);
             const chat = model.startChat({//这里没有声明关键字（let 或 const），直接使用了外层的 let chat。
                 history: chatHistory,
                 generationConfig: generationConfigs,
@@ -402,7 +403,7 @@ async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
             const aiMessage = response.text();
             tmpMessage.remove();
             updateChat('ai', aiMessage);
-
+      
             validSchluesselFound = true; // 设置标志位
             return;
         } catch (error) {
@@ -427,11 +428,6 @@ async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
     }
 }
 
-// 保存历史
-function saveChatHistory() {
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-}
-
 // 更新聊天的函数
 const chatMessages = document.getElementById("chatMessages");
 const chatSection = document.getElementById("chatSection");
@@ -442,7 +438,7 @@ function updateChat(role, text) {
     // const html = marked.parse(text);
 
     if (role === 'ai') {
-        text = text + "\n\n**本站不保存数据，仅通过localstorage缓存，请及时保存！**";//添加提示信息
+        text = text + "\n\n**本站不保存数据，仅缓存在浏览器中，请及时保存！**";//添加提示信息
         // 解析文本中的德语内容
         let html = marked.parse(text);
         message.innerHTML = html;
@@ -461,6 +457,11 @@ function updateChat(role, text) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     saveChatHistory(); // 保存到 localStorage
     return message; // 返回创建的 message 元素
+}
+
+// 保存历史
+function saveChatHistory() {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
 }
 
 function addExportButton(message, text) {
