@@ -196,6 +196,19 @@ function createCommandButtons(commands) {
 
             // 更新输入框的 placeholder
             userInput.placeholder = command.placeholder;
+
+            // 如果是清除历史对话按钮，立即处理
+            if (command.label === '清除历史对话') {
+                if (confirm('这会删除当前以及之前的所有会话内容，确定吗？')) {
+                    localStorage.clear();
+                    location.reload(true);
+                    // alert("历史对话已删除");
+                }
+                // 重置 activeButton
+                button.classList.remove('active');
+                activeButton = null;
+                userInput.placeholder = ''; // 重置 placeholder
+            }
         });
         buttonContainer.appendChild(button);
     });
@@ -319,31 +332,27 @@ sendButton.addEventListener('click', async () => {
     let topP = parseFloat(activeButton.topP);
     let topK = parseFloat(activeButton.topK);
 
-    if (activeButton.content.includes("代码")) {// 如果有其他条件：|| useactiveButton.content.includes("")
+    if (activeButton.content.includes("代码") || activeButton.content.includes("daima")) {
         Temperature = 0.15;
         topP = 0.3;
         topK = 5;
     }
 
-    if (activeButton.content === '清除历史对话') {
-        localStorage.clear();
-        location.reload(true);
-        alert("历史对话已删除");
-    } else {
-        if (!userText) {
-            alert('请输入内容！');
-            userInput.focus();
-            return;
-        }
-        let button_label = activeButton.label;
-        let symbol = "'"
-        // const fullCommand = symbol + userText + symbol + activeButton.content;
-        const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
-        (async () => {
-            userInput.value = ''; // 立即清空
-            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK);
-        })();
+    if (!userText) {
+        alert('请输入内容！');
+        userInput.focus();
+        return;
     }
+
+    let button_label = activeButton.label;
+    let symbol = "'"
+    // const fullCommand = symbol + userText + symbol + activeButton.content;
+    const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
+    (async () => {
+        userInput.value = ''; // 立即清空
+        await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK);
+    })();
+
 });
 
 // 添加回车发送功能
