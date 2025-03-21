@@ -244,10 +244,14 @@ sendButton.addEventListener('click', async () => {
     let symbol = "'"
     // const fullCommand = symbol + userText + symbol + activeButton.content;
     const fullCommand = `${symbol}${userText}${symbol}${activeButton.content}`;
-    await sendMessageToAPI(userText, fullCommand);
+    // await sendMessageToAPI(userText, fullCommand);
 
-    // 清空输入框但保持按钮状态
-    userInput.value = '';
+    // // 清空输入框但保持按钮状态
+    // userInput.value = '';
+    (async () => {
+        userInput.value = ''; // 立即清空
+        await sendMessageToAPI(userText, fullCommand);
+    })();
 });
 
 // 添加回车发送功能
