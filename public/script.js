@@ -1,14 +1,40 @@
 let settings;
 let currentIndex;
 let Schluessel;
-let isSettingsLoaded = false; // 添加标志位，表示 settings 是否加载完成
 
-let chat;
+
+// let temperature; //设置温度 (范围通常为 0.0 - 1.0)
+// let topP; //设置 Top-P (范围通常为 0.0 - 1.0)
+// let topK; //设置 Top-K (通常为正整数)
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
+let model_name = "gemini-2.0-flash";
+let max_token = 100000;
+let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];// 加载历史
+// console.log(chatHistory);
+const safetySettings = [{
+    category: "HARM_CATEGORY_HARASSMENT",
+    threshold: "BLOCK_NONE"
+},
+{
+    category: "HARM_CATEGORY_HATE_SPEECH",
+    threshold: "BLOCK_NONE"
+},
+{
+    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    threshold: "BLOCK_NONE"
+},
+{
+    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+    threshold: "BLOCK_NONE"
+},
+{
+    category: "HARM_CATEGORY_CIVIC_INTEGRITY",
+    threshold: "BLOCK_NONE"
+}];
 
 // 页面初始化时加载
 document.addEventListener('DOMContentLoaded', loadSettings);
-
+let isSettingsLoaded = false; // 添加标志位，表示 settings 是否加载完成
 async function loadSettings() {
     try {
         const response = await fetch('/settings', {
@@ -28,22 +54,6 @@ async function loadSettings() {
             settings = settings.split(',');
             console.log('Length: ' + settings.length);
             sendButton.disabled = false;
-
-            currentIndex = Math.floor(Math.random() * settings.length);
-            Schluessel = settings[currentIndex];
-            // console.log(currentIndex, Schluessel);
-
-            //初始化模型
-            const genAI = new GoogleGenerativeAI(Schluessel);
-            let model_name = "gemini-2.0-flash";
-            let max_token = 100000;
-            let model = genAI.getGenerativeModel({ model: model_name });
-            chat = model.startChat({//这里没有声明关键字（let 或 const），直接使用了外层的 let chat。
-                history: [],
-                generationConfig: { maxOutputTokens: max_token },
-                safetySettings: safetySettings,
-            });
-
             isSettingsLoaded = true; // 设置标志位
         } else {
             sendButton.disabled = true; // 禁用发送按钮
@@ -55,42 +65,103 @@ async function loadSettings() {
     }
 };
 
+// 页面加载时加载localstorage数据
+document.addEventListener('DOMContentLoaded', loadChatHistory);
+function loadChatHistory() {
+    if (chatHistory.length === 0) {
+        console.log("没有历史记录可加载");
+        return;
+    }
+
+    // 清空当前聊天区域（可选）
+    chatMessages.innerHTML = '';
+
+    // 遍历历史记录并插入
+    chatHistory.forEach((entry) => {
+        const role = entry.role === "user" ? "user" : "ai";
+        const text = entry.parts[0].text; // 假设每条消息只有一个 part
+        updateChat(role, text);
+    });
+
+    // 滚动到底部（或根据需求调整）
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    console.log("聊天历史已加载，共 " + chatHistory.length + " 条记录");
+}
+
+// temperature（0.0 - 1.0）：控制输出的随机性。
+// 低值（例如 0.3）：更确定、更可预测的输出，适合翻译。
+// 高值（例如 0.9）：更多样、更具创意的输出，适合故事或对话。
+// topP（0.0 - 1.0）：控制输出的多样性（核采样）。
+// 低值（例如 0.7）：限制生成范围，适合精确任务。
+// 高值（例如 0.95）：增加多样性，适合创意任务。
+// topK（正整数）：控制考虑的词汇范围。
+// 低值（例如 20）：更聚焦，适合翻译。
+// 高值（例如 50）：更多选择，适合创意生成。
 const commands = [
     {
         label: "中-英-德互译",
         content: "请自动帮我检测单引号中内容的语言（中文，英文，德语中的一种），并自动翻译成另外两种语言并给出该对应语言的例句以及例句的中文翻译。按照以下格式输出：\n检测到的语言：中文 \n**翻译：** \n* **英文:** stapler \n* **例句:** I need a stapler to fasten these papers together. 我需要一个订书机来把这些纸订在一起。\n* **德文:** Hefter \n* **例句:** Der Hefter ist kaputt. 订书机坏了。",
-        placeholder: "请输入要翻译的文本..."
+        placeholder: "请输入要翻译的文本...",
+        Temperature: '0.3',// 翻译任务需要更高的确定性
+        topP: '0.7',
+        topK: '20'
     },
     {
         label: "德语故事",
         content: "请根据单引号中的关键词帮我用德语写一个A1-B1水平的故事，主题围绕关键词，并以我为第一视角。故事需要简单易懂，情节完整，并自然地包含与关键词相关的词汇和表达方式。 请避免使用复杂的语法结构和生僻词汇。 故事长度大约为300字。 每句德语结束后（以句号或者问号等符号为结束标志），请在这句德语的下面另起一行提供相应的中文（不需要英文的）翻译以便帮助我理解。另外，在故事结束后提供一些你认为重点的词汇和短语，并给出2个例句及其中文翻译，以便我更好地理解其含义和用法。请严格按照输出指令来输出。",
-        placeholder: "请输入故事关键词..."
+        placeholder: "请输入故事关键词...",
+        Temperature: '0.9',// 创意任务需要更多多样性
+        topP: '0.95',
+        topK: '50'
     },
     {
         label: "德语对话",
         content: "请根据单引号中的关键词帮我用德语写一个A1-B1水平的对话（其他人（Lukas或Linda）问，我（Herr Li）回答），主题围绕关键词。对话需要简单易懂（如果可能，请偏向日常口语化而非书面化），情节完整，并自然地包含与关键词相关的词汇和表达方式。 请避免使用复杂的语法结构和生僻词汇。 对话长度大约为300字。 每句德语结束后（以句号或者问号等符号为结束标志），请在这句德语的下面另起一行提供相应的中文（不需要英文的）翻译以便帮助我理解。另外，在故事结束后提供一些你认为重点的词汇和短语，并给出2个例句及其中文翻译，以便我更好地理解其含义和用法。请严格按照输出指令来输出。",
-        placeholder: "请输入对话关键词..."
+        placeholder: "请输入对话关键词...",
+        Temperature: '0.9',// 创意任务需要更多多样性
+        topP: '0.95',
+        topK: '50'
     },
     {
         label: "中译德",
         content: "请将单引号中的中文短文翻译成德语，翻译水平应为A1-B1，避免使用生僻词汇和复杂的语法结构。 在每句中文下面一行附上对应的德语句子。请严格按照输出指令来输出。",
-        placeholder: "请输入要翻译的中文..."
+        placeholder: "请输入要翻译的中文...",
+        Temperature: '0.3',// 翻译任务需要更高的确定性
+        topP: '0.7',
+        topK: '20'
     },
     {
         label: "词汇精讲",
         content: "单引号中的是上面文章（对话）中的一些词汇，我不理解其含义和用法。请用简明易懂的【中文】解释它们的含义，并尽可能提供德语例句（例句难度控制在A1-B1水平）来说明其在不同语境下的用法。如果某个词有多种含义，请分别解释。",
-        placeholder: "请输入要解释的词汇..."
+        placeholder: "请输入要解释的词汇...",
+        Temperature: '0.3',// 翻译任务需要更高的确定性
+        topP: '0.7',
+        topK: '20'
     },
     {
         label: "润色德语邮件",
         content: "单引号中的是一封德语邮件，请帮我检查。过国有格式，语法，语气以及其他错误，指出并给出改正版",
-        placeholder: "输入德语邮件"
+        placeholder: "输入德语邮件",
+        Temperature: '0.8',// 翻译任务需要更高的确定性
+        topP: '0.8',
+        topK: '30'
     },
     {
         label: "其他",
         content: "\n请用中文回答。",
-        placeholder: "这里可以随便输入点什么..."
-    }
+        placeholder: "这里可以随便输入点什么...",
+        Temperature: '0.5',// 这里一般是写代码或者问一些一般的问题
+        topP: '0.7',
+        topK: '30'
+    },
+    {
+        label: "清除历史对话",
+        content: "清除历史对话",
+        placeholder: "点击下方《发送》按钮确认清除历史对话，并刷新页面",
+        Temperature: '0.5',// 这里一般是写代码或者问一些一般的问题
+        topP: '0.7',
+        topK: '30'
+    },
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -223,16 +294,6 @@ if ('webkitSpeechRecognition' in window) {
 const sendButton = document.getElementById('sendButton');
 
 sendButton.addEventListener('click', async () => {
-    const userText = userInput.value.trim();
-    if (!activeButton) {
-        alert('请先选择一个功能按钮！');
-        return;
-    }
-    if (!userText) {
-        alert('请输入内容！');
-        userInput.focus();
-        return;
-    }
     // 确保 settings 已加载
     if (!isSettingsLoaded) {
         await loadSettings(); // 等待加载完成
@@ -241,17 +302,43 @@ sendButton.addEventListener('click', async () => {
             return;
         }
     }
-    let symbol = "'"
-    // const fullCommand = symbol + userText + symbol + activeButton.content;
-    const fullCommand = `${symbol}${userText}${symbol}${activeButton.content}`;
-    // await sendMessageToAPI(userText, fullCommand);
 
-    // // 清空输入框但保持按钮状态
-    // userInput.value = '';
-    (async () => {
-        userInput.value = ''; // 立即清空
-        await sendMessageToAPI(userText, fullCommand);
-    })();
+    if (!activeButton) {
+        alert('请先选择一个功能按钮！');
+        return;
+    }
+
+    const userText = userInput.value.trim();
+
+    let Temperature = parseFloat(activeButton.Temperature);
+    let topP = parseFloat(activeButton.topP);
+    let topK = parseFloat(activeButton.topK);
+
+    if (activeButton.content.includes("代码")) {// 如果有其他条件：|| useactiveButton.content.includes("")
+        Temperature = 0.15;
+        topP = 0.3;
+        topK = 5;
+    }
+
+    if (activeButton.content === '清除历史对话') {
+        localStorage.clear();
+        location.reload(true);
+        console.log("历史对话已删除");
+    } else {
+        if (!userText) {
+            alert('请输入内容！');
+            userInput.focus();
+            return;
+        }
+
+        let symbol = "'"
+        // const fullCommand = symbol + userText + symbol + activeButton.content;
+        const fullCommand = `${symbol}${userText}${symbol}${activeButton.content}`;
+        (async () => {
+            userInput.value = ''; // 立即清空
+            await sendMessageToAPI(userText, fullCommand, Temperature, topP, topK);
+        })();
+    }
 });
 
 // 添加回车发送功能
@@ -269,30 +356,7 @@ userInput.addEventListener('keydown', (event) => {
 //     }
 // });
 
-
-const safetySettings = [{
-    category: "HARM_CATEGORY_HARASSMENT",
-    threshold: "BLOCK_NONE"
-},
-{
-    category: "HARM_CATEGORY_HATE_SPEECH",
-    threshold: "BLOCK_NONE"
-},
-{
-    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-    threshold: "BLOCK_NONE"
-},
-{
-    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-    threshold: "BLOCK_NONE"
-},
-{
-    category: "HARM_CATEGORY_CIVIC_INTEGRITY",
-    threshold: "BLOCK_NONE"
-}];
-
-
-async function sendMessageToAPI(userinput, message) {
+async function sendMessageToAPI(userinput, message, Temperature, topP, topK) {
     const userText = userinput.trim();
     updateChat('user', userText)
 
@@ -310,26 +374,50 @@ async function sendMessageToAPI(userinput, message) {
     let retries = settings.length;
     let validSchluesselFound = false; // 添加标志位
 
+    let generationConfigs = {
+        maxOutputTokens: max_token,
+        temperature: Temperature,
+        topP: topP,
+        topK: topK
+    };
+
     while (retries > 0 && !validSchluesselFound) {//循环条件
+        let retries_no = settings.length - retries + 1;
+        console.log(`第${retries_no}次尝试: `);
         try {
+            currentIndex = Math.floor(Math.random() * settings.length);
+            console.log('current key No.: ', currentIndex);
             Schluessel = settings[currentIndex];
+
+            const genAI = new GoogleGenerativeAI(Schluessel);
+            let model = genAI.getGenerativeModel({ model: model_name });
+            const chat = model.startChat({//这里没有声明关键字（let 或 const），直接使用了外层的 let chat。
+                history: chatHistory,
+                generationConfig: generationConfigs,
+                safetySettings: safetySettings,
+            });
+
             const result = await chat.sendMessage(message);
             const response = await result.response;
             const aiMessage = response.text();
             tmpMessage.remove();
             updateChat('ai', aiMessage);
+
             validSchluesselFound = true; // 设置标志位
             return;
         } catch (error) {
             console.error("出现错误: ", error);
             //  更精确的错误处理 (例如检查 HTTP 状态码)
             currentIndex = (currentIndex + 1) % settings.length;
-            genAI = new GoogleGenerativeAI(Schluessel);
-            model = genAI.getGenerativeModel({ model: model_name });
-            chat = model.startChat({ history: [], generationConfig: { maxOutputTokens: max_token }, safetySettings: safetySettings, });
+            // genAI = new GoogleGenerativeAI(Schluessel);
+            // model = genAI.getGenerativeModel({ model: model_name });
+            // chat = model.startChat({
+            //     history: chatHistory,
+            //     generationConfig: generationConfigs,
+            //     safetySettings: safetySettings,
+            // });
             retries--;
             await new Promise(resolve => setTimeout(resolve, 2000)); // 增加延迟
-            //updateChat('ai', 'Error: Unable to generate a response.');
             //console.error(error);
         }
     }
@@ -337,9 +425,12 @@ async function sendMessageToAPI(userinput, message) {
         tmpMessage.remove();
         updateChat("ai", "⚠️ 所有 API Key 均不可用，请稍后刷新重试。");
     }
-
 }
 
+// 保存历史
+function saveChatHistory() {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+}
 
 // 更新聊天的函数
 const chatMessages = document.getElementById("chatMessages");
@@ -348,23 +439,27 @@ const chatSection = document.getElementById("chatSection");
 function updateChat(role, text) {
     const message = document.createElement("div");
     message.classList.add("message", role);
-    const html = marked.parse(text);
+    // const html = marked.parse(text);
 
     if (role === 'ai') {
-        text = text + "\n\n**本站不保存数据，请及时导出！**";//添加提示信息
+        text = text + "\n\n**本站不保存数据，仅通过localstorage缓存，请及时保存！**";//添加提示信息
         // 解析文本中的德语内容
-        //const html = marked.parse(text);
+        let html = marked.parse(text);
         message.innerHTML = html;
+        // console.log(html);
 
-        addPlayButtons(message);//添加语音播放按钮
+        // addPlayButtons(message);//添加语音播放按钮
         addExportButton(message, text); // 添加导出按钮
     } else {
+        let html = marked.parse(text);
         message.innerHTML = html;
+
         addCopyButton(message, text); // 添加复制按钮
     }
 
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    saveChatHistory(); // 保存到 localStorage
     return message; // 返回创建的 message 元素
 }
 
