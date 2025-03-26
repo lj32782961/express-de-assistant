@@ -8,6 +8,7 @@ let Schluessel;
 // let topK; //设置 Top-K (通常为正整数)
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
 let model_name = "gemini-2.0-flash";
+let model_name_for_img = "gemini-2.0-flash-exp-image-generation";
 let max_token = 100000;
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];// 加载历史
 // console.log(chatHistory);
@@ -76,16 +77,30 @@ function loadChatHistory() {
     // 清空当前聊天区域（可选）
     chatMessages.innerHTML = '';
 
-    // 遍历历史记录并插入
+    // 过滤并删除包含 "<fullcommand>" 的条目
+    let initialLength = chatHistory.length;
+    chatHistory = chatHistory.filter((entry) => {
+        const role = entry.role;
+        const text = entry.parts[0].text; // 假设每条消息只有一个 part
+        // 如果是用户消息且包含 "<fullcommand>"，标记为删除
+        if (role === "user" && text.includes("<fullcommand>")) {
+            // console.log(`删除包含 "<fullcommand>" 的历史记录: ${text}`);
+            return false; // 从 chatHistory 中移除
+        }
+        return true; // 保留其他条目
+    });
+
+    // 如果有条目被删除，保存更新后的 chatHistory
+    if (chatHistory.length < initialLength) {
+        saveChatHistory(); // 更新 localStorage
+        // console.log(`已删除 ${initialLength - chatHistory.length} 条包含 "<fullcommand>" 的记录`);
+    }
+
+    // 遍历并显示剩余的历史记录
     chatHistory.forEach((entry) => {
         const role = entry.role === "user" ? "user" : "ai";
-        const text = entry.parts[0].text; // 假设每条消息只有一个 part
-        // 如果是用户消息且包含“<fullcommand>”，跳过显示
-        if (role === "user" && text.includes("<fullcommand>")) {
-            return; // 跳过这条记录
-        }
-        //其他不受影响
-        updateChat(role, text);
+        const text = entry.parts[0].text;
+        updateChat(role, text); // 显示到聊天框
     });
 
     // 滚动到底部（或根据需求调整）
@@ -158,6 +173,15 @@ const commands = [
         Temperature: '0.5',// 这里一般是写代码或者问一些一般的问题
         topP: '0.7',
         topK: '30'
+    },
+    {
+        label: "生成图片",
+        content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
+        // content: "",
+        placeholder: "请输入图片描述，例如：骑自行车的杜甫",
+        Temperature: '0.7',
+        topP: '0.9',
+        topK: '40'
     },
     {
         label: "清除历史对话",
@@ -350,7 +374,12 @@ sendButton.addEventListener('click', async () => {
     const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
     (async () => {
         userInput.value = ''; // 立即清空
-        await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK);
+        if (button_label === "生成图片") {
+            await generateImg(userText, fullCommand, button_label, Temperature, topP, topK, model_name_for_img)
+        }
+        else {
+            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, model_name);
+        }
     })();
 
 });
@@ -370,14 +399,13 @@ userInput.addEventListener('keydown', (event) => {
 //     }
 // });
 
-async function sendMessageToAPI(userinput, message, button_label, Temperature, topP, topK) {
+async function sendMessageToAPI(userinput, message, button_label, Temperature, topP, topK, model_name) {
     const userText = userinput.trim();
     updateChat('user', userText)
 
     // 将用户消息添加到历史记录
     chatHistory.push({
         role: "user",
-
         parts: [{ text: marked.parse("<strong>" + button_label + ": \n\n" + "</strong>" + userText) }]
     });
 
@@ -422,6 +450,7 @@ async function sendMessageToAPI(userinput, message, button_label, Temperature, t
             const result = await chat.sendMessage(message);
             const response = await result.response;
             const aiMessage = response.text();
+
             tmpMessage.remove();
             updateChat('ai', aiMessage);
 
@@ -449,6 +478,127 @@ async function sendMessageToAPI(userinput, message, button_label, Temperature, t
     }
 }
 
+async function generateImg(userinput, message, button_label, Temperature, topP, topK, model_name_for_img) {
+    const userText = userinput.trim();
+    updateChat('user', userText)
+
+    // 将用户消息添加到历史记录
+    chatHistory.push({
+        role: "user",
+        parts: [{ text: marked.parse("<strong>" + button_label + ": \n\n" + "</strong>" + userText) }]
+    });
+
+    // 添加“思考中”的消息
+    const tmpMessage = updateChat('ai', '图片生成中，请等待...');
+
+    if (!isSettingsLoaded) {
+        // 如果 settings 未加载完成，等待 loadSettings 执行
+        await loadSettings();
+        if (!isSettingsLoaded) {
+            updateChat("ai", "⚠️ 设置加载失败，请稍后重试。");
+            return;
+        }
+    }
+    let retries = settings.length;
+    let validSchluesselFound = false; // 添加标志位
+
+    let generationConfigs = {
+        maxOutputTokens: max_token,
+        temperature: Temperature,
+        topP: topP,
+        topK: topK,
+        responseModalities: ['Text', 'Image'] // 添加图片支持
+    };
+
+    while (retries > 0 && !validSchluesselFound) {//循环条件
+        let retries_no = settings.length - retries + 1;
+        // console.log(`第${retries_no}次尝试: `);
+        try {
+            currentIndex = Math.floor(Math.random() * settings.length);
+            console.log('current key No.: ', currentIndex);
+            Schluessel = settings[currentIndex];
+
+            const genAI = new GoogleGenerativeAI(Schluessel);
+            let model = genAI.getGenerativeModel({
+                model: model_name_for_img,
+                history: chatHistory,
+                generationConfig: generationConfigs,
+                safetySettings: safetySettings,
+            });
+            // console.log(chatHistory);
+
+            // const chat = model.startChat({//这里没有声明关键字（let 或 const），直接使用了外层的 let chat。
+            //     history: chatHistory,
+            //     generationConfig: generationConfigs,
+            //     safetySettings: safetySettings,
+            // });
+            // const result = await chat.sendMessage(message);
+
+            let result = await model.generateContent(message);
+            const response = await result.response;
+
+            // 处理响应中的文本和图片
+            let aiMessage = '';
+            const candidates = response.candidates[0].content.parts;
+            // 处理文本和图片
+            for (const part of candidates) {
+                if (part.text) {
+                    aiMessage += part.text;
+                } else if (part.inlineData) {
+                    const imageData = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType;
+                    const imageUrl = `data:${mimeType};base64,${imageData}`;
+                    console.log('picture generated');
+                    displayImageInChat(imageUrl); // 显示图片
+
+                    // aiMessage = "\n[生成了一张图片]"; // 在文本中添加提示
+                }
+            }
+
+            tmpMessage.remove();
+            // updateChat('ai', aiMessage);
+
+            validSchluesselFound = true; // 设置标志位
+            return;
+        } catch (error) {
+            console.error("出现错误: ", error);
+            //  更精确的错误处理 (例如检查 HTTP 状态码)
+            currentIndex = (currentIndex + 1) % settings.length;
+            // genAI = new GoogleGenerativeAI(Schluessel);
+            // model = genAI.getGenerativeModel({ model: model_name });
+            // chat = model.startChat({
+            //     history: chatHistory,
+            //     generationConfig: generationConfigs,
+            //     safetySettings: safetySettings,
+            // });
+            retries--;
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 增加延迟
+            //console.error(error);
+        }
+    }
+    if (!validSchluesselFound) { //  根据标志位判断
+        tmpMessage.remove();
+        updateChat("ai", "⚠️ 所有 API Key 均不可用，请稍后刷新重试。");
+    }
+}
+
+// 显示图片的函数
+function displayImageInChat(imageUrl) {
+    const message = document.createElement("div");
+    message.classList.add("message", "ai");
+
+    const img = document.createElement("img");
+    img.src = imageUrl;
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "5px";
+    img.alt = "生成的图片";
+
+    message.appendChild(img);
+    addExportButton(message, imageUrl); // 添加导出按钮支持保存图片
+
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 // 更新聊天的函数
 const chatMessages = document.getElementById("chatMessages");
 const chatSection = document.getElementById("chatSection");
@@ -464,6 +614,11 @@ function updateChat(role, text) {
         let html = marked.parse(text);
         message.innerHTML = html;
         // console.log(html);
+        // 只在 AI 角色时保存文本到 chatHistory
+        // chatHistory.push({
+        //     role: "ai",
+        //     parts: [{ text }]
+        // });
         saveChatHistory();
         // addPlayButtons(message);//添加语音播放按钮
         addExportButton(message, text); // 添加导出按钮
@@ -473,6 +628,8 @@ function updateChat(role, text) {
 
         addCopyButton(message, text); // 添加复制按钮
     }
+
+    addDeleteButton(message, text); // 添加导出按钮
 
     chatMessages.appendChild(message);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -485,20 +642,37 @@ function saveChatHistory() {
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
 }
 
-function addExportButton(message, text) {
-    const exportButton = createButton("导出", "#28a745", exportFile); // 创建导出按钮
-    exportButton.addEventListener("click", () => exportFile(text)); // 绑定事件
+function addExportButton(message, content) {
+    const exportButton = createButton("导出", "#28a745"); // 创建导出按钮
+    exportButton.addEventListener("click", () => {
+        // 判断 content 是否为图片 URL
+        if (content.startsWith('data:image/')) {
+            exportImage(content); // 导出图片
+        } else {
+            exportFile(content); // 导出文本
+        }
+    });
     message.appendChild(exportButton);// 添加按钮到消息块中
 }
 
 function addCopyButton(message, text) {
-    const copyButton = createButton("复制", "#007bff", copyText); // 创建复制按钮
-    copyButton.addEventListener("click", () => copyText(text)); // 绑定事件
+    const copyButton = createButton("复制", "#007bff"); // 创建复制按钮
+    copyButton.addEventListener("click", () => {
+        copyText(text)
+    }); // 绑定事件
     message.appendChild(copyButton);// 添加按钮到消息块中
 }
 
+function addDeleteButton(message, text) {
+    const deleteButton = createButton("删除", "#dc3545");
+    deleteButton.addEventListener("click", () => {
+        deleteBlock(message, text)
+    })
+    message.appendChild(deleteButton);
+}
 
-function createButton(text, backgroundColor, callback) {
+
+function createButton(text, backgroundColor) {
     const button = document.createElement("button");
     button.textContent = text;
     button.style.marginLeft = "10px";
@@ -552,6 +726,48 @@ function exportToBlob(filename, content) {
     console.log("文件已通过 Blob 保存！");
 }
 
+async function exportImage(imageUrl) {
+    const defaultName = `Generated_Image_${Date.now()}.png`; // 默认图片文件名
+
+    if (window.showSaveFilePicker) {
+        try {
+            // 配置文件选择对话框
+            const options = {
+                suggestedName: defaultName,
+                types: [{ description: "PNG Image", accept: { "image/png": [".png"] } }],
+            };
+            const handle = await window.showSaveFilePicker(options);
+            const writable = await handle.createWritable();
+
+            // 将 Base64 转换为 Blob
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+
+            // 写入文件并关闭
+            await writable.write(blob);
+            await writable.close();
+            console.log("图片已成功保存！");
+        } catch (error) {
+            console.error("用户取消或保存失败：", error);
+        }
+    } else {
+        // 浏览器不支持 showSaveFilePicker，使用 Blob 下载
+        const userFileName = prompt("请输入导出文件名（无需扩展名）", defaultName.replace(".png", ""));
+        const fileName = userFileName ? `${userFileName}.png` : defaultName;
+
+        // 将 Base64 转换为 Blob 并下载
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log("图片已通过 Blob 保存！");
+    }
+}
+
 function copyText(text) {
     navigator.clipboard.writeText(text)// 使用navigator.clipboard API复制文本
         .then(() => {
@@ -564,6 +780,39 @@ function copyText(text) {
         });
 }
 
+function deleteBlock(messageElement, text) {
+    if (confirm('确定删除该条记录吗？')) {
+        messageElement.remove();
+        //location.reload(true);
+        alert("已删除");
+    }
+    const role = messageElement.classList.contains('user') ? 'user' : 'model';
+
+    const index = chatHistory.findIndex(entry => {
+        const entryText = entry.parts[0].text;
+        // console.log('entry.role: ',entry.role);
+        // 根据角色匹配消息内容
+        if (entry.role === role) {
+            if (role === 'user') {
+                // 用户消息可能包含格式化标签，比较原始文本
+                return entryText.includes(text) || marked.parse(entryText).includes(text);
+            } else {
+                // console.log('entryText: ', entryText);
+                // console.log('text: ', text);
+                // AI 消息直接比较
+                return text.includes(entryText) || marked.parse(text).includes(entryText);
+            }
+        }
+        return false;
+    });
+    if (index !== -1) {
+        chatHistory.splice(index, 1);// 从 chatHistory 中删除
+        saveChatHistory();// 保存更新后的历史
+        console.log(`已删除记录 ${index}`);
+    } else {
+        console.log("记录不存在");
+    }
+}
 
 function addPlayButtons(message) {
     const germanSentences = message.querySelectorAll('p, li');

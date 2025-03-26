@@ -42,5 +42,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`服务器运行在http://localhost:${port}`);
+  console.log(`\n服务器运行在http://localhost:${port}`);
 });
