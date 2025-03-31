@@ -26,7 +26,7 @@ app.get('/settings', (req, res) => {
   if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
     // 如果是 AJAX 请求 (fetch), 返回 API key
     if (settings_values) {
-      res.json({ settings_values });
+      res.json({ settings_values});
       // console.log(settings_values);//vs终端中打印信息
     } else {
       res.status(500).json({ error: 'API_KEY 未设置' });

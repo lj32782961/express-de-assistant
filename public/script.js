@@ -2,12 +2,13 @@ let settings;
 let currentIndex;
 let Schluessel;
 
-
 // let temperature; //设置温度 (范围通常为 0.0 - 1.0)
 // let topP; //设置 Top-P (范围通常为 0.0 - 1.0)
 // let topK; //设置 Top-K (通常为正整数)
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
-let model_name = "gemini-2.0-flash";
+// let model_name = "gemini-2.0-flash";
+//gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
+let model_name = 'gemini-2.5-pro-exp-03-25';//这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
 let model_name_for_img = "gemini-2.0-flash-exp-image-generation";
 let max_token = 100000;
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];// 加载历史
@@ -119,7 +120,7 @@ function loadChatHistory() {
 // 高值（例如 50）：更多选择，适合创意生成。
 const commands = [
     {
-        label: "中-英-德互译",
+        label: "中-英-德词汇互译",
         content: "请自动帮我检测单引号中内容的语言（中文，英文，德语中的一种），并自动翻译成另外两种语言并给出该对应语言的例句以及例句的中文翻译。按照以下格式输出：\n检测到的语言：中文 \n**翻译：** \n* **英文:** stapler \n* **例句:** I need a stapler to fasten these papers together. 我需要一个订书机来把这些纸订在一起。\n* **德文:** Hefter \n* **例句:** Der Hefter ist kaputt. 订书机坏了。",
         placeholder: "请输入要翻译的文本...",
         Temperature: '0.3',// 翻译任务需要更高的确定性
@@ -143,9 +144,17 @@ const commands = [
         topK: '50'
     },
     {
-        label: "中译德",
+        label: "短文：中译德",
         content: "请将单引号中的中文短文翻译成德语，翻译水平应为A1-B1，避免使用生僻词汇和复杂的语法结构。 在每句中文下面一行附上对应的德语句子。请严格按照输出指令来输出。",
         placeholder: "请输入要翻译的中文...",
+        Temperature: '0.3',// 翻译任务需要更高的确定性
+        topP: '0.7',
+        topK: '20'
+    },
+    {
+        label: "短文：英译中",
+        content: "请将单引号中的英文短文翻译成中文。",
+        placeholder: "请输入要翻译的英文...",
         Temperature: '0.3',// 翻译任务需要更高的确定性
         topP: '0.7',
         topK: '20'
