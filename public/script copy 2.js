@@ -5,15 +5,12 @@ let Schluessel;
 // let temperature; //设置温度 (范围通常为 0.0 - 1.0)
 // let topP; //设置 Top-P (范围通常为 0.0 - 1.0)
 // let topK; //设置 Top-K (通常为正整数)
-
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
-const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash"; 
-const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25"; 
-//这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
-const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation"; 
-// 这是 Gemini 2.0 Flash 模型的图像生成版本，适用于图像生成任务。
+// let model_name = "gemini-2.0-flash";
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
-let max_token = 1000000; //设置最大输出令牌数
+let model_name = 'gemini-2.5-pro-exp-03-25';//这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
+let model_name_for_img = "gemini-2.0-flash-exp-image-generation";
+let max_token = 100000;
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];// 加载历史
 // console.log(chatHistory);
 const safetySettings = [{
@@ -186,15 +183,15 @@ const commands = [
         topP: '0.7',
         topK: '30'
     },
-    // {
-    //     label: "生成图片",
-    //     content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
-    //     // content: "",
-    //     placeholder: "请输入图片描述，例如：骑自行车的杜甫",
-    //     Temperature: '0.7',
-    //     topP: '0.9',
-    //     topK: '40'
-    // },
+    {
+        label: "生成图片",
+        content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
+        // content: "",
+        placeholder: "请输入图片描述，例如：骑自行车的杜甫",
+        Temperature: '0.7',
+        topP: '0.9',
+        topK: '40'
+    },
     {
         label: "清除历史对话",
         content: "清除历史对话",
@@ -386,21 +383,11 @@ sendButton.addEventListener('click', async () => {
     const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
     (async () => {
         userInput.value = ''; // 立即清空
-        let modelName;
         if (button_label === "生成图片") {
-            modelName = MODEL_GEMINI_2_FLASH_IMAGE_GENERATION; // 对应图片生成模型
-        } else if (button_label === "其他") {
-            modelName = MODEL_GEMINI_2_5_PRO_EXP_03_25; // 对应默认模型
-        } else {
-            modelName = MODEL_GEMINI_2_FLASH; // 对应其他模型
-        }
-
-        // console.log(`Button: ${button_label}, Model: ${modelName}`);
-        if (button_label === "生成图片") {
-            await generateImg(userText, fullCommand, button_label, Temperature, topP, topK, modelName)
+            await generateImg(userText, fullCommand, button_label, Temperature, topP, topK, model_name_for_img)
         }
         else {
-            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, modelName);
+            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, model_name);
         }
     })();
 
@@ -563,20 +550,18 @@ async function generateImg(userinput, message, button_label, Temperature, topP, 
             let aiMessage = '';
             const candidates = response.candidates[0].content.parts;
             // 处理文本和图片
-            if (response.candidates && response.candidates[0]?.content?.parts) {
-                for (const part of response.candidates[0].content.parts) {
-                    if (part.text) {
-                        aiMessage += part.text;
-                    } else if (part.inlineData) {
-                        const imageData = part.inlineData.data;
-                        const mimeType = part.inlineData.mimeType;
-                        const imageUrl = `data:${mimeType};base64,${imageData}`;
-                        console.log('picture generated');
-                        displayImageInChat(imageUrl); // 显示图片
-                    }
+            for (const part of candidates) {
+                if (part.text) {
+                    aiMessage += part.text;
+                } else if (part.inlineData) {
+                    const imageData = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType;
+                    const imageUrl = `data:${mimeType};base64,${imageData}`;
+                    console.log('picture generated');
+                    displayImageInChat(imageUrl); // 显示图片
+
+                    // aiMessage = "\n[生成了一张图片]"; // 在文本中添加提示
                 }
-            } else {
-                console.log("响应数据格式不正确，无法生成图片");
             }
 
             tmpMessage.remove();
