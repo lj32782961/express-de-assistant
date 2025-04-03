@@ -7,10 +7,10 @@ let Schluessel;
 // let topK; //设置 Top-K (通常为正整数)
 
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
-const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash"; 
-const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25"; 
+const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash";
+const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
 //这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
-const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation"; 
+const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation";
 // 这是 Gemini 2.0 Flash 模型的图像生成版本，适用于图像生成任务。
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
 let max_token = 1000000; //设置最大输出令牌数
@@ -186,15 +186,15 @@ const commands = [
         topP: '0.7',
         topK: '30'
     },
-    // {
-    //     label: "生成图片",
-    //     content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
-    //     // content: "",
-    //     placeholder: "请输入图片描述，例如：骑自行车的杜甫",
-    //     Temperature: '0.7',
-    //     topP: '0.9',
-    //     topK: '40'
-    // },
+    {
+        label: "生成图片",
+        content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
+        // content: "",
+        placeholder: "请输入图片描述，例如：骑自行车的杜甫",
+        Temperature: '0.7',
+        topP: '0.9',
+        topK: '40'
+    },
     {
         label: "清除历史对话",
         content: "清除历史对话",
@@ -383,7 +383,13 @@ sendButton.addEventListener('click', async () => {
     let button_label = activeButton.label;
     let symbol = "'"
     // const fullCommand = symbol + userText + symbol + activeButton.content;
-    const fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
+    let fullCommand;
+    if (button_label === "生成图片") {
+        fullCommand = userText;
+    }
+    else {
+        fullCommand = `<fullcommand>: +${symbol}${userText}${symbol}${activeButton.content}`;
+    }
     (async () => {
         userInput.value = ''; // 立即清空
         let modelName;
