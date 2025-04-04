@@ -302,7 +302,12 @@ if ('webkitSpeechRecognition' in window) {
 
     recognition.onerror = (event) => {
         console.error('语音识别出错:', event.error);
-        stopRecording();
+        if (event.error === 'no-speech' || event.error === 'aborted') {
+            console.log('尝试重新启动语音识别...');
+            recognition.start();
+        } else {
+            stopRecording(); // 停止录音
+        }
 
         let errorMessage = '语音识别出错: ';
         switch (event.error) {
@@ -335,6 +340,12 @@ if ('webkitSpeechRecognition' in window) {
         microphoneButton.classList.remove('recording'); // 移除动画
         stopButton.classList.add('hidden'); //隐藏停止按钮
         console.log('语音识别已结束');
+
+        // 自动重新启动语音识别
+        if (isRecording) {
+            console.log('重新启动语音识别...');
+            recognition.start();
+        }
     };
 
 
@@ -342,7 +353,7 @@ if ('webkitSpeechRecognition' in window) {
     function toggleSpeechRecognition() {
         if (!isRecording) {
             // 开始录音
-            userInput.value = ''; // 录音前清空输入框
+            // userInput.value = ''; // 录音前清空输入框
             recognition.start();
         } else {
             // 停止录音
