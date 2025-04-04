@@ -128,14 +128,15 @@ const commands = [
         placeholder: "请输入要翻译的文本...",
         Temperature: '0.3',// 翻译任务需要更高的确定性
         topP: '0.7',
-        topK: '20'
+        topK: '20'// 4.1在每一句德语原文（以句号、问号等标点符号结尾）之后，立即换行。
+        // 4.2紧接着在新的一行提供该句对应的中文翻译（请勿提供英文翻译），以方便理解。
+        // 5.1故事结束后，请另起一段，整理出你认为的重点德语词汇和短语。
+        // 5.2对于每一个重点词汇/短语，请提供两个德语例句，并附上相应的中文翻译，以帮助学习者理解其具体含义和用法。
     },
     {
         label: "德语故事",
-        content: `请根据单引号中的关键词，为我创作一篇A1-B1水平的德语故事。
-
+        content: `请扮演一位德语学习助手。根据我在单引号中提供的关键词，创作一篇德语故事。
 具体要求如下：
-
 1.视角与主题： 故事需使用第一人称（'Ich'）进行叙述，主题应紧密围绕提供的关键词展开。
 2.内容与风格： 故事情节需完整、简单易懂，并自然地融入与关键词相关的词汇及表达。请务必使用简洁的语言，避免复杂的语法结构和生僻词汇。
 3.篇幅： 故事长度建议控制在300个德语单词左右。
@@ -146,7 +147,7 @@ const commands = [
 5.1故事结束后，请另起一段，整理出你认为的重点德语词汇和短语。
 5.2对于每一个重点词汇/短语，请提供两个德语例句，并附上相应的中文翻译，以帮助学习者理解其具体含义和用法。
 6严格执行： 请确保严格遵循以上所有指令进行输出。
-        `,
+`,
         placeholder: "请输入故事关键词...",
         Temperature: '0.9',// 创意任务需要更多多样性
         topP: '0.95',
@@ -368,7 +369,12 @@ if ('webkitSpeechRecognition' in window) {
     alert('您的浏览器不支持语音识别 API');
 }
 
-
+//清除输入框内容
+const clearButton = document.getElementById('clearButton');
+clearButton.addEventListener('click', () => {
+    userInput.value = ''; // 清空输入框内容
+    userInput.focus(); // 将焦点放回输入框
+})
 //发送消息
 const sendButton = document.getElementById('sendButton');
 
@@ -871,16 +877,18 @@ function deleteBlock(messageElement, text) {
 }
 
 function addPlayButtons(message) {
-    const germanSentences = message.querySelectorAll('p, li');
+    const germanSentences = message.querySelectorAll('p');
+
     germanSentences.forEach(element => {
         const text = element.textContent.trim(); // trim() 去除多余空格
-        if (text.match(/[äöüßÄÖÜ]|[a-zA-Z]/)) { // 简单判断是否包含德语字符
+        if (text.match(/[äöüßÄÖÜ]|[a-zA-Z]/)) { // // 检查文本是否非空且包含德语或英文字符（简单判断）
             const playButton = document.createElement('button');
             playButton.className = 'play-button';
-            playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-            let utterance = null;
+            playButton.innerHTML = '<i class="fas fa-volume-up"></i>';//初始为播放图标
+            let utterance = null;// 用于跟踪此按钮关联的朗读实例
 
             playButton.addEventListener('click', () => {
+
                 if (speechSynthesis.speaking && !speechSynthesis.paused) {
                     speechSynthesis.cancel();
                     playButton.classList.remove('stop');
@@ -888,16 +896,18 @@ function addPlayButtons(message) {
                 } else {
                     utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = 'de-DE';
+                    utterance.rate = 0.75; // 设置语速（1 为正常语速）
+                    utterance.pitch = 1; // 设置音调（1 为正常音调）
                     utterance.onend = () => {
                         playButton.classList.remove('stop');
                         playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                     };
-                    speechSynthesis.speak(utterance);
+                    speechSynthesis.speak(utterance);// 播放语音
                     playButton.classList.add('stop');
                     playButton.innerHTML = '<i class="fas fa-stop"></i>';
                 }
             });
-            //element.appendChild(playButton);暂时不添加语音播放按钮
+            element.appendChild(playButton);//暂时不添加语音播放按钮
         }
     });
 }
