@@ -604,6 +604,7 @@ async function generateImg(userinput, message, button_label, Temperature, topP, 
                         const imageUrl = `data:${mimeType};base64,${imageData}`;
                         console.log('picture generated');
                         displayImageInChat(imageUrl); // 显示图片
+                        updateChat('ai', "⚠️**图片无法被保存进本地缓存，请及时导出！**");
                     }
                 }
             } else {
