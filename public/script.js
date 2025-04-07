@@ -247,6 +247,7 @@ function createCommandButtons(commands) {
 
             // 更新输入框的 placeholder
             userInput.placeholder = command.placeholder;
+            userInput.focus(); // 聚焦到输入框
 
             // 如果是清除历史对话按钮，立即处理
             if (command.label === '清除历史对话') {
