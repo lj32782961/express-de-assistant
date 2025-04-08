@@ -90,7 +90,7 @@ body {
 /* 命令按钮网格布局 */
 #commandButtons {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
   padding: 5px;
   background-color: #f8f9fa;

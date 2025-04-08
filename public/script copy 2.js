@@ -11,8 +11,6 @@ const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash";
 const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
 //这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
 const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation";
-let definedModel = localStorage.getItem('selectedModel') || MODEL_GEMINI_2_FLASH;
-
 // 这是 Gemini 2.0 Flash 模型的图像生成版本，适用于图像生成任务。
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
 let max_token = 1000000; //设置最大输出令牌数
@@ -40,7 +38,7 @@ const safetySettings = [{
 }];
 
 // 页面初始化时加载
-// document.addEventListener('DOMContentLoaded', loadSettings);
+document.addEventListener('DOMContentLoaded', loadSettings);
 let isSettingsLoaded = false; // 添加标志位，表示 settings 是否加载完成
 async function loadSettings() {
     try {
@@ -73,7 +71,7 @@ async function loadSettings() {
 };
 
 // 页面加载时加载localstorage数据
-// document.addEventListener('DOMContentLoaded',     loadChatHistory);
+document.addEventListener('DOMContentLoaded', loadChatHistory);
 function loadChatHistory() {
     if (chatHistory.length === 0) {
         console.log("没有历史记录可加载");
@@ -112,36 +110,6 @@ function loadChatHistory() {
     // 滚动到底部（或根据需求调整）
     chatMessages.scrollTop = chatMessages.scrollHeight;
     console.log("聊天历史已加载，共 " + chatHistory.length + " 条记录");
-}
-
-
-// 页面加载时加载模型
-// document.addEventListener('DOMContentLoaded', initializeModelSelector);
-function initializeModelSelector() {
-    const modelSelector = document.getElementById('modelSelector');
-    const defaultModel = 'gemini-2.0-flash';
-
-    // 从 localStorage 中获取模型值
-    const savedModel = localStorage.getItem('selectedModel') || defaultModel;
-    console.log('当前模型:', savedModel);
-
-    // 设置下拉框的默认值
-    modelSelector.value = savedModel;
-
-    // 监听下拉框的变化
-    modelSelector.addEventListener('change', () => {
-        const selectedModel = modelSelector.value;
-        localStorage.setItem('selectedModel', selectedModel); // 更新 localStorage
-        console.log(`模型已切换，当前模型为：${selectedModel}`);
-    });
-
-    // // 如果缓存被清空，恢复默认值
-    // const clearButton = document.getElementById('clearButton');
-    // clearButton.addEventListener('click', () => {
-    //     localStorage.removeItem('selectedModel'); // 清除模型设置
-    //     modelSelector.value = defaultModel; // 恢复默认值
-    //     console.log('缓存已清空，模型恢复为默认值。');
-    // });
 }
 
 // temperature（0.0 - 1.0）：控制输出的随机性。
@@ -252,9 +220,9 @@ const commands = [
     },
 ];
 
-// document.addEventListener('DOMContentLoaded', () => {
-//     createCommandButtons(commands);
-// });
+document.addEventListener('DOMContentLoaded', () => {
+    createCommandButtons(commands);
+});
 
 let activeButton = null;
 // 创建按钮的函数
@@ -460,9 +428,9 @@ sendButton.addEventListener('click', async () => {
         if (button_label === "生成图片") {
             modelName = MODEL_GEMINI_2_FLASH_IMAGE_GENERATION; // 对应图片生成模型
         } else if (button_label === "其他") {
-            modelName = definedModel; // 对应默认模型
+            modelName = MODEL_GEMINI_2_5_PRO_EXP_03_25; // 对应默认模型
         } else {
-            modelName = definedModel; // 对应其他模型
+            modelName = MODEL_GEMINI_2_FLASH; // 对应其他模型
         }
 
         // console.log(`Button: ${button_label}, Model: ${modelName}`);
@@ -471,7 +439,6 @@ sendButton.addEventListener('click', async () => {
         }
         else {
             await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, modelName);
-            console.log(`Button: ${button_label}, Model: ${modelName}`);
         }
     })();
 
@@ -955,12 +922,4 @@ document.getElementById("scrollTopButton").addEventListener("click", () => {
 // Scroll to Bottom button functionality (chatMessages)
 document.getElementById("scrollBottomButton").addEventListener("click", () => {
     chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
-});
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeModelSelector(); // 初始化模型选择器
-    loadSettings(); // 加载设置
-    loadChatHistory(); // 加载聊天历史
-    createCommandButtons(commands); // 创建功能按钮
 });
