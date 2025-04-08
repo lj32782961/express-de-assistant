@@ -11,7 +11,7 @@ const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash";
 const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
 //这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
 const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation";
-let definedModel = localStorage.getItem('selectedModel') || MODEL_GEMINI_2_FLASH;
+
 
 // 这是 Gemini 2.0 Flash 模型的图像生成版本，适用于图像生成任务。
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
@@ -114,7 +114,7 @@ function loadChatHistory() {
     console.log("聊天历史已加载，共 " + chatHistory.length + " 条记录");
 }
 
-
+let definedModel;
 // 页面加载时加载模型
 // document.addEventListener('DOMContentLoaded', initializeModelSelector);
 function initializeModelSelector() {
@@ -133,7 +133,11 @@ function initializeModelSelector() {
         const selectedModel = modelSelector.value;
         localStorage.setItem('selectedModel', selectedModel); // 更新 localStorage
         console.log(`模型已切换，当前模型为：${selectedModel}`);
+        definedModel = selectedModel; // 更新 definedModel
     });
+
+    // 初始化时设置 definedModel
+    definedModel = savedModel;
 
     // // 如果缓存被清空，恢复默认值
     // const clearButton = document.getElementById('clearButton');
@@ -143,6 +147,7 @@ function initializeModelSelector() {
     //     console.log('缓存已清空，模型恢复为默认值。');
     // });
 }
+
 
 // temperature（0.0 - 1.0）：控制输出的随机性。
 // 低值（例如 0.3）：更确定、更可预测的输出，适合翻译。
