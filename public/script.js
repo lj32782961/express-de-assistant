@@ -602,9 +602,9 @@ sendButton.addEventListener('click', async () => {
 
 });
 
-// 添加回车发送功能
+// 添加ctrl+回车发送功能
 userInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && event.ctrlKey) {
         event.preventDefault();
         sendButton.click();
     }
