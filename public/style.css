@@ -150,6 +150,9 @@ body {
 }
 
 #sendButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 120px;
   /* 固定宽度 */
   height: 40px;
@@ -162,7 +165,11 @@ body {
   color: white;
   cursor: pointer;
 }
+
 #clearButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 80px;
   /* 固定宽度 */
   height: 40px;
