@@ -7,7 +7,7 @@ let Schluessel;
 // let topK; //设置 Top-K (通常为正整数)
 
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
-const MODEL_GEMINI_2_FLASH = "gemini-2.5-flash";
+const MODEL_GEMINI_2_FLASH = "gemini-2.0-flash";
 const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
 //这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
 const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation";
@@ -119,7 +119,7 @@ let definedModel;
 // document.addEventListener('DOMContentLoaded', initializeModelSelector);
 function initializeModelSelector() {
     const modelSelector = document.getElementById('modelSelector');
-    const defaultModel = 'gemini-2.5-flash';
+    const defaultModel = 'gemini-2.5-flash'; 
 
     // 从 localStorage 中获取模型值
     const savedModel = localStorage.getItem('selectedModel') || defaultModel;
