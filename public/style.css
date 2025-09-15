@@ -346,6 +346,59 @@ body {
   /* 让 textarea 尽可能占据剩余空间 */
 }
 
+
+.other-links-container {
+
+  display: block;
+  ;
+  align-items: center;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 10px 0;
+
+}
+
+.other-links-title {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.other-links-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.other-links-list a {
+  color: #ffffff;
+  text-decoration: none;
+  transition: color 0.2s;
+  margin-bottom: 8px;
+  min-width: 100px;
+  display: flex;
+  background-color: #007bff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  justify-content: center; /* 水平居中 */
+  align-items: center;    /* 垂直居中 */
+}
+
+.other-links-list a:hover {
+  /* color: #0056b3; */
+  /* text-decoration: underline; */
+  background-color: #28a745;
+}
+
+/* 每行最多3个链接 */
+.other-links-list a:nth-child(3n+1) {
+  clear: left;
+}
+
 .hidden {
   display: none;
 }
