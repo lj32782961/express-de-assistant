@@ -1102,12 +1102,14 @@ function addPlayButtons(message) {
                 } else {
                     const utterance = new SpeechSynthesisUtterance(text);// 创建新的朗读实例
                     if (availableGermanVoices.length > 0) {
-                        utterance.voice = availableGermanVoices[availableGermanVoices_index]; // 使用第一个德语语音
+                        utterance.voice = availableGermanVoices[availableGermanVoices_index]; // 使用第x个德语语音
                         utterance.lang = utterance.voice.lang; // 设置语言为语音的语言
                         console.log(`Using voice: ${utterance.voice.name}, Lang: ${utterance.voice.lang}`);
                     }else {//如果没有找到德语语音，退回到通用的德语语言代码
-                        utterance.lang = 'de-DE';
-                        console.log('No specific German voice found, falling back to de-DE.');
+                        console.log('Specific German voice is not found, choose the first available voice.');
+                        utterance.voice = availableGermanVoices[0]; // 使用第x个德语语音
+                        utterance.lang = utterance.voice.lang; // 设置语言为语音的语言
+                        console.log(`Using voice: ${utterance.voice.name}, Lang: ${utterance.voice.lang}`);
                     }
 
                     utterance.rate = tts_rate; // 设置语速（1 为正常语速）
