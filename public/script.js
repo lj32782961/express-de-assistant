@@ -196,36 +196,58 @@ const commands = [
         // 5.1故事结束后，请另起一段，整理出你认为的重点德语词汇和短语。
         // 5.2对于每一个重点词汇/短语，请提供两个德语例句，并附上相应的中文翻译，以帮助学习者理解其具体含义和用法。
     },
-    {
+{
         label: "德语故事",
-        content: `请扮演一位德语学习助手。根据我在单引号中提供的关键词，创作一篇德语故事。
+        content: `你是一位专业的德语学习助手。你的任务是根据用户提供的德语关键词，创作一篇德语故事。
+用户将通过以下格式提供关键词： 关键词：[词1], [词2], [词3], ...
 具体要求如下：
-1.视角与主题： 故事需使用第一人称（'Ich'）进行叙述，主题应紧密围绕提供的关键词展开。
-2.内容与风格： 故事情节需完整、简单易懂，并自然地融入与关键词相关的词汇及表达。请务必使用简洁的语言和常用词汇。语法要求：避免使用过去时，优先使用现在完成时。
-3.篇幅： 故事长度建议控制在300个德语单词左右。
-4.格式（逐句翻译）：
-4.1在每一句德语原文（以句号、问号等标点符号结尾）之后，立即换行。
-4.2紧接着在新的一行提供该句对应的中文翻译（请勿提供英文翻译），以方便理解。
-5.重点词汇：
-5.1故事结束后，请另起一段，整理出你认为的重点德语词汇和短语。
-5.2对于每一个重点词汇/短语，请提供两个德语例句，并附上相应的中文翻译，以帮助学习者理解其具体含义和用法。
-6严格执行： 请确保严格遵循以上所有指令进行输出。
+1. 视角与主题：
+1.1 故事需使用第一人称（'Ich'）进行叙述。
+1.2 主题应紧密围绕用户提供的关键词展开。
+2. 内容与风格：
+2.1 故事情节需完整、简单易懂，并自然地融入与关键词相关的词汇及表达。
+2.2 请务必使用日常口语化语言和常用词汇。
+2.3 语法要求： 避免使用一般过去时（Präteritum），优先使用口语中常用的时态(如：现在完成时（Perfekt）)。
+3. 篇幅：
+3.1 故事长度建议控制在250-350个德语单词之间。
+4. 翻译：
+在每一段德语原文结束后，在新的段落中，提供整篇故事的中文翻译。
+4. 严格执行： 请确保严格遵循以上所有指令进行输出。
 `,
         placeholder: "请输入故事关键词...",
         Temperature: '0.9',// 创意任务需要更多多样性
         topP: '0.95',
         topK: '50'
     },
+    // Return a VALID JSON object with: german, native (Chinese), example, exampleTrans, level (A1-C2), tags (list of strings), gender (m/f/n).
     {
         label: "德语对话",
         content: `
-        "请根据单引号中的关键词帮我用德语写一个A1-B1水平的日常对话。
+        "请根据单引号中的关键词帮我用德语写一个A2-B1水平的日常对话。
         （其他人（Lukas或Linda）问，我（Herr Li）回答），主题围绕关键词。
-        对话需要简单易懂（如果可能，请偏向日常口语化而非书面化），情节完整连贯，并自然地包含与关键词相关的词汇和表达方式。
+        对话需要简单易懂（偏向日常口语化而非书面化），情节完整连贯，并自然地包含与关键词相关的词汇和表达方式。
         避免使用复杂的语法结构和生僻词汇，使用完成时（因为日常生活中德国人习惯用完成时）。
         对话长度大约为300字。 
-        每句德语结束后（以句号或者问号等符号为结束标志），**单独换一行**，提供相应的中文（不需要英文的）翻译以便帮助我理解。
+        每句德语结束后（以句号或者问号等符号为结束标志），在新的段落中，提供相应的中文（不需要英文的）翻译以便帮助我理解。
+        对话格式示例：
+        <p>Li：</p> 
+        <p>Guten Morgen, Lukas! Wie geht es dir heute?</p> 
+        <p>早上好，Lukas！你今天怎么样？</p> 
+        <p>Lukas:</p> 
+        <p>Guten Morgen, Herr Li! Mir geht es gut, danke. Und Ihnen?</p> 
+        <p>早上好，李先生！我很好，谢谢。您呢？</p> 
+        ...
+
         另外，在故事结束后提供一些你认为重点的词汇和短语，并给出2个例句（**使用完成时**）及其中文翻译，以便我更好地理解其含义和用法。
+        词汇和短语示例：
+        1. Wort/Phrase: "der Tisch"
+        <p>例句1</p>
+        <p>Ich habe den Tisch gedeckt. </p> 
+        <p>我已经摆好了桌子。</p>
+        <p>例句2</p>
+        <p>Ich habe den Tisch gedeckt. </p> 
+        <p>我已经摆好了桌子。</p>        
+
         请严格按照输出指令来输出。"
         `,
         placeholder: "请输入对话关键词...",
@@ -864,7 +886,7 @@ function updateChat(role, text) {
         //     parts: [{ text }]
         // });
         saveChatHistory();
-        // addPlayButtons(message);//添加语音播放按钮
+        addPlayButtons(message);//添加语音播放按钮
         addExportButton(message, text); // 添加导出按钮
     } else {
         let html = marked.parse(text);
@@ -1058,6 +1080,9 @@ function deleteBlock(messageElement, text) {
     }
 }
 
+
+let availableGermanVoices = [];
+
 function addPlayButtons(message) {
     const germanSentences = message.querySelectorAll('p');
 
@@ -1070,16 +1095,23 @@ function addPlayButtons(message) {
             let utterance = null;// 用于跟踪此按钮关联的朗读实例
 
             playButton.addEventListener('click', () => {
-
                 if (speechSynthesis.speaking && !speechSynthesis.paused) {
                     speechSynthesis.cancel();
                     playButton.classList.remove('stop');
                     playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
                 } else {
-                    utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'de-DE';
-                    utterance.rate = 0.75; // 设置语速（1 为正常语速）
-                    utterance.pitch = 1; // 设置音调（1 为正常音调）
+                    const utterance = new SpeechSynthesisUtterance(text);// 创建新的朗读实例
+                    if (availableGermanVoices.length > 0) {
+                        utterance.voice = availableGermanVoices[availableGermanVoices_index]; // 使用第一个德语语音
+                        utterance.lang = utterance.voice.lang; // 设置语言为语音的语言
+                        console.log(`Using voice: ${utterance.voice.name}, Lang: ${utterance.voice.lang}`);
+                    }else {//如果没有找到德语语音，退回到通用的德语语言代码
+                        utterance.lang = 'de-DE';
+                        console.log('No specific German voice found, falling back to de-DE.');
+                    }
+
+                    utterance.rate = tts_rate; // 设置语速（1 为正常语速）
+                    utterance.pitch = tts_pitch; // 设置音调（1 为正常音调）
                     utterance.onend = () => {
                         playButton.classList.remove('stop');
                         playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
@@ -1106,7 +1138,35 @@ document.getElementById("scrollBottomButton").addEventListener("click", () => {
 });
 
 
+function initializeVoices(){ 
+    const synth = window.speechSynthesis;
+    function initVoices(){
+        const voices = synth.getVoices();
+        if (voices.length > 0) {
+            console.log('get voices list');
+            voices.forEach(voice => {
+                // console.log(`Voice: ${voice.name}, Lang: ${voice.lang}`);
+            });
+
+            availableGermanVoices  = voices.filter(voice => voice.lang.includes('de-'));
+            // console.log('German voices:', availableGermanVoices );
+        }
+    }
+
+    if (synth.onvoiceschanged !== undefined) {
+        console.log('针对 Chrome/Edge，监听异步更新');
+        synth.onvoiceschanged = initVoices;
+    }
+
+    initVoices();
+}
+// 默认 TTS 设置
+let availableGermanVoices_index = 3;
+let tts_rate = 1.1;
+let tts_pitch = 1.0;
+
 document.addEventListener('DOMContentLoaded', () => {
+    initializeVoices();// 初始化可用语音列表
     initializeModelSelector(); // 初始化模型选择器
     loadSettings(); // 加载设置
     loadChatHistory(); // 加载聊天历史
