@@ -1082,6 +1082,7 @@ function deleteBlock(messageElement, text) {
 
 
 let availableGermanVoices = [];
+const Lang_storage_key = 'preferredLanguage';
 
 function addPlayButtons(message) {
     const germanSentences = message.querySelectorAll('p');
@@ -1112,8 +1113,8 @@ function addPlayButtons(message) {
                         console.log(`Using voice: ${utterance.voice.name}, Lang: ${utterance.voice.lang}`);
                     }
 
-                    utterance.rate = tts_rate; // 设置语速（1 为正常语速）
-                    utterance.pitch = tts_pitch; // 设置音调（1 为正常音调）
+                    utterance.rate = 1; // 设置语速（1 为正常语速）
+                    utterance.pitch = 1; // 设置音调（1 为正常音调）
                     utterance.onend = () => {
                         playButton.classList.remove('stop');
                         playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
@@ -1142,16 +1143,42 @@ document.getElementById("scrollBottomButton").addEventListener("click", () => {
 
 function initializeVoices(){ 
     const synth = window.speechSynthesis;
+    const voicesSelector = document.getElementById('voicesSelector');
     function initVoices(){
         const voices = synth.getVoices();
         if (voices.length > 0) {
-            console.log('get voices list');
+            console.log('already get voices list');
             voices.forEach(voice => {
                 // console.log(`Voice: ${voice.name}, Lang: ${voice.lang}`);
             });
-
             availableGermanVoices  = voices.filter(voice => voice.lang.includes('de-'));
             // console.log('German voices:', availableGermanVoices );
+            voicesSelector.innerHTML = '';// 清空现有选项
+            if (availableGermanVoices.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '未找到德语语音';
+                voicesSelector.appendChild(option);
+                return;
+            } 
+            const savedPreferredLanguage = localStorage.getItem(Lang_storage_key);// 获取保存的偏好语言
+            availableGermanVoices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                let voicename = voice.name.includes(' - ') ? voice.name.split(' - ')[0] : voice.name;
+                option.textContent = `${voicename} (${voice.lang})`;
+                if (voice.name === savedPreferredLanguage) {
+                    option.selected = true;
+                }
+                voicesSelector.appendChild(option);
+            });
+            
+            voicesSelector.addEventListener('change', () => {
+                availableGermanVoices_index = parseInt(voicesSelector.value);
+                const selectedVoice = availableGermanVoices[availableGermanVoices_index];
+                localStorage.setItem(Lang_storage_key, selectedVoice.name);
+                console.log(`Selected voice: ${selectedVoice.name}, Lang: ${selectedVoice.lang}`);
+            });
         }
     }
 
@@ -1163,9 +1190,7 @@ function initializeVoices(){
     initVoices();
 }
 // 默认 TTS 设置
-let availableGermanVoices_index = 3;
-let tts_rate = 1.1;
-let tts_pitch = 1.0;
+let availableGermanVoices_index = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeVoices();// 初始化可用语音列表
