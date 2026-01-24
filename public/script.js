@@ -1179,6 +1179,13 @@ function initializeVoices(){
                 localStorage.setItem(Lang_storage_key, selectedVoice.name);
                 console.log(`Selected voice: ${selectedVoice.name}, Lang: ${selectedVoice.lang}`);
             });
+        } else {
+            console.log('voices list is empty');
+            voicesSelector.innerHTML = '';// 清空现有选项
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = '未找到语音选项';
+            voicesSelector.appendChild(option);
         }
     }
 
