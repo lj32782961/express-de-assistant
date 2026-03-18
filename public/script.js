@@ -595,10 +595,24 @@ sendButton.addEventListener('click', async () => {
         topK = 5;
     }
 
-    if (!userText) {
-        alert('请输入内容！');
-        userInput.focus();
-        return;
+    if (activeButton.label === "阅读图片") {
+    // 如果是“阅读图片”按钮
+    if (selectedImages.length === 0) {
+        // 且没有选择图片
+        alert('请上传图片！'); // 提示上传图片
+        // userInput.focus(); // 注意：这里通常不会让文本输入框聚焦，因为是图片操作
+        return; // 阻止后续操作
+    }
+    // 否则（有图片），继续执行，不进行任何提示
+    } else {
+        // 如果不是“阅读图片”按钮
+        if (!userText) {
+            // 且用户输入内容为空
+            alert('请输入内容！'); // 提示输入内容
+            userInput.focus(); // 让文本输入框聚焦
+            return; // 阻止后续操作
+        }
+        // 否则（有内容），继续执行，不进行任何提示
     }
 
     let button_label = activeButton.label;
