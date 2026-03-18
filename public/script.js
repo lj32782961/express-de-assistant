@@ -9,11 +9,8 @@ let Schluessel;
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
 const MODEL_GEMINI_2_FLASH = "gemini-2.5-flash-lite";
 const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
-//这是一个公开实验性 Gemini 模型，默认情况下思考模式始终处于开启状态。
-const MODEL_GEMINI_2_FLASH_IMAGE_GENERATION = "gemini-2.0-flash-exp-image-generation";
 
 
-// 这是 Gemini 2.0 Flash 模型的图像生成版本，适用于图像生成任务。
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
 let max_token = 1000000; //设置最大输出令牌数
 let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];// 加载历史
@@ -368,13 +365,23 @@ const commands = [
         topK: '30'
     },
     {
-        label: "生成图片",
-        content: "单引号中是一段描述，请根据描述生成一张图片。注意，生成的图片中不要包含任何文字。",
-        // content: "",
-        placeholder: "请输入图片描述，例如：骑自行车的杜甫",
-        Temperature: '0.7',
-        topP: '0.9',
-        topK: '40'
+        label: "阅读图片",
+        content: `你是一位卓越的德语教学专家。请仔细识别并分析用户上传图片中的德语内容：
+1. **原文呈现**：准确识别并转录图片中的所有德语文字。
+2. **全文翻译**：将识别出的德语内容翻译成地道、流畅的中文。
+3. **词汇精讲**：
+   - 挑选图片中的核心词汇或难点词汇。
+   - 给出每个词的：[词性]、[基本释义]、[在本句中的具体含义]。
+   - 为每个词提供两个难度在 B1 级别的德语例句，并附上对应的中文翻译。
+4. **语法要点**：
+   - 详细解析图片内容中出现的关键语法现象（如：格位变化、动词位移、从句结构、形容词词尾等）。
+5. **句型结构**：
+   - 分析并解释图片中的重要句型，说明其用法及适用场景。
+请使用清晰的 Markdown 格式输出，确保讲解易于理解。`,
+        placeholder: "请上传包含德语文字的图片...",
+        Temperature: '0.3',
+        topP: '0.7',
+        topK: '20'
     },
     {
         label: "逐词垂直翻译",
@@ -606,23 +613,11 @@ sendButton.addEventListener('click', async () => {
     }
     (async () => {
         userInput.value = ''; // 立即清空
-        let modelName;
-        if (button_label === "生成图片") {
-            modelName = MODEL_GEMINI_2_FLASH_IMAGE_GENERATION; // 对应图片生成模型
-        } else if (button_label === "其他") {
-            modelName = definedModel; // 对应默认模型
-        } else {
-            modelName = definedModel; // 对应其他模型
-        }
+        let modelName = definedModel;
 
         // console.log(`Button: ${button_label}, Model: ${modelName}`);
-        if (button_label === "生成图片") {
-            await generateImg(userText, fullCommand, button_label, Temperature, topP, topK, modelName)
-        }
-        else {
-            await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, modelName);
-            console.log(`Button: ${button_label}, Model: ${modelName}`);
-        }
+        await sendMessageToAPI(userText, fullCommand, button_label, Temperature, topP, topK, modelName);
+        console.log(`Button: ${button_label}, Model: ${modelName}`);
     })();
 
 });
