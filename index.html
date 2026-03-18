@@ -45,9 +45,14 @@
         <!-- 按钮将通过 JavaScript 动态添加 -->
       </div>
 
+      <div id="imagePreviewContainer" class="image-preview-container hidden"></div>
       <div class="input-container">
         <textarea id="userInput" placeholder="在这里输入内容..."></textarea>
         <button id="clearButton">清空</button>
+        <label for="imageInput" class="image-upload-icon" title="上传图片">
+          <i class="fas fa-image"></i>
+        </label>
+        <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
         <span id="microphoneButton" class="microphone-icon"></span>
         <button id="stopButton" class="stop-button hidden"></button>
       </div>

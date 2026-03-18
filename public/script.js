@@ -554,6 +554,8 @@ if ('webkitSpeechRecognition' in window) {
 const clearButton = document.getElementById('clearButton');
 clearButton.addEventListener('click', () => {
     userInput.value = ''; // 清空输入框内容
+    selectedImages = []; // 清空已选图片
+    renderImagePreviews(); // 更新预览
     userInput.focus(); // 将焦点放回输入框
 })
 //发送消息
@@ -640,15 +642,99 @@ userInput.addEventListener('keydown', (event) => {
 //     }
 // });
 
+let selectedImages = [];
+const imageInput = document.getElementById('imageInput');
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+
+imageInput.addEventListener('change', handleImageUpload);
+
+async function handleImageUpload(event) {
+    const files = Array.from(event.target.files);
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        
+        const base64 = await fileToBase64(file);
+        selectedImages.push({
+            inlineData: {
+                data: base64.split(',')[1],
+                mimeType: file.type
+            },
+            preview: base64
+        });
+    }
+    renderImagePreviews();
+    imageInput.value = ''; // Reset input
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+function renderImagePreviews() {
+    imagePreviewContainer.innerHTML = '';
+    if (selectedImages.length > 0) {
+        imagePreviewContainer.classList.remove('hidden');
+    } else {
+        imagePreviewContainer.classList.add('hidden');
+    }
+
+    selectedImages.forEach((img, index) => {
+        const item = document.createElement('div');
+        item.className = 'image-preview-item';
+        
+        const image = document.createElement('img');
+        image.src = img.preview;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => {
+            selectedImages.splice(index, 1);
+            renderImagePreviews();
+        };
+
+        item.appendChild(image);
+        item.appendChild(removeBtn);
+        imagePreviewContainer.appendChild(item);
+    });
+}
+
 async function sendMessageToAPI(userinput, message, button_label, Temperature, topP, topK, model_name) {
     const userText = userinput.trim();
-    updateChat('user', userText)
+    
+    // Create user display message
+    let displayContent = userText;
+    if (selectedImages.length > 0) {
+        displayContent += '<br>' + selectedImages.map(img => `<img src="${img.preview}" style="max-width: 100px; margin: 5px; border-radius: 5px;">`).join('');
+    }
+    updateChat('user', displayContent);
 
-    // 将用户消息添加到历史记录
+    // Prepare parts for the API
+    const parts = [{ text: message }];
+    selectedImages.forEach(img => {
+        parts.push({
+            inlineData: {
+                data: img.inlineData.data,
+                mimeType: img.inlineData.mimeType
+            }
+        });
+    });
+
+    // Add to chat history for persistence (optional, note: large base64 might exceed localStorage)
     chatHistory.push({
         role: "user",
         parts: [{ text: marked.parse("<strong>" + button_label + ": \n\n" + "</strong>" + userText) }]
+        // We don't save images to localStorage history to avoid quota limits
     });
+
+    // Clear previews and selected images
+    selectedImages = [];
+    renderImagePreviews();
 
     // 添加“思考中”的消息
     const tmpMessage = updateChat('ai', '思考中，请等待...');
@@ -681,39 +767,39 @@ async function sendMessageToAPI(userinput, message, button_label, Temperature, t
 
             const genAI = new GoogleGenerativeAI(Schluessel);
             let model = genAI.getGenerativeModel({ model: model_name });
-            // console.log(chatHistory);
-            const chat = model.startChat({//这里没有声明关键字（let 或 const），直接使用了外层的 let chat。
-                history: chatHistory,
+            
+            // For multi-modal, we use generateContent directly if there are images, 
+            // or startChat if it's just text. Actually, startChat also supports parts in sendMessage.
+            const chat = model.startChat({
+                history: chatHistory.slice(0, -1), // Don't include the last push yet, we'll send it now
                 generationConfig: generationConfigs,
                 safetySettings: safetySettings,
             });
 
-            const result = await chat.sendMessage(message);
+            const result = await chat.sendMessage(parts);
             const response = await result.response;
             const aiMessage = response.text();
 
             tmpMessage.remove();
             updateChat('ai', aiMessage);
 
+            // Now update chatHistory with AI response
+            chatHistory.push({
+                role: "model",
+                parts: [{ text: aiMessage }]
+            });
+            saveChatHistory();
+
             validSchluesselFound = true; // 设置标志位
             return;
         } catch (error) {
             console.error("出现错误: ", error);
-            //  更精确的错误处理 (例如检查 HTTP 状态码)
             currentIndex = (currentIndex + 1) % settings.length;
-            // genAI = new GoogleGenerativeAI(Schluessel);
-            // model = genAI.getGenerativeModel({ model: model_name });
-            // chat = model.startChat({
-            //     history: chatHistory,
-            //     generationConfig: generationConfigs,
-            //     safetySettings: safetySettings,
-            // });
             retries--;
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 增加延迟
-            //console.error(error);
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
-    if (!validSchluesselFound) { //  根据标志位判断
+    if (!validSchluesselFound) {
         tmpMessage.remove();
         updateChat("ai", "⚠️ 所有 API Key 均不可用，请稍后刷新重试。");
     }
