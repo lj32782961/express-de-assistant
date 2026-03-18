@@ -170,16 +170,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 80px;
+  /* width: 80px; */
   /* 固定宽度 */
   height: 40px;
   /* 按钮高度 */
   padding: 10px;
   font-size: 16px;
   border-radius: 10px;
-  border: 1px solid #ccc;
-  background-color: #007bff;
-  color: white;
+  /* border: 1px solid #ccc; */
+  /* background-color: #007bff; */
+  color: black;
   cursor: pointer;
 }
 
@@ -272,137 +272,103 @@ body {
   }
 }
 
-/* 停止按钮样式 */
-.stop-button {
-  width: 48px;
-  /* 设置按钮宽度 */
-  height: 48px;
-  /* 设置按钮高度 */
-  border-radius: 50%;
-  /* 设置为圆形 */
-  background-color: #f44336;
-  /* 红色背景 */
-  border: none;
-  /* 移除边框 */
-  cursor: pointer;
-  /* 鼠标悬停时显示手型 */
-  display: inline-flex;
-  /* 使用 flex 布局，让正方形居中 */
-  align-items: center;
-  /* 垂直居中 */
-  justify-content: center;
-  /* 水平居中 */
-  margin-left: 5px;
-  /* 保持与其他元素的间距 */
-  padding: 0;
-  /* 移除内边距 */
-  overflow: hidden;
-  /* 确保正方形不超出圆形 */
-}
-
-/* 停止按钮内部的正方形 */
-.stop-button::before {
-  content: '';
-  /* 必须设置 content 才能显示伪元素 */
-  display: block;
-  /* 设置为块级元素，以便设置宽高 */
-  width: 24px;
-  /* 正方形宽度 */
-  height: 24px;
-  /* 正方形高度 */
-  background-color: white;
-  /* 白色正方形 */
-}
-
-.image-upload-icon, .camera-icon {
-  font-size: 24px;
-  color: #007bff;
-  cursor: pointer;
-  margin: 0 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.3s;
-}
-
-.image-upload-icon:hover, .camera-icon:hover {
-  color: #0056b3;
-}
-
-.image-preview-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-bottom: none;
-  border-radius: 5px 5px 0 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.image-preview-item {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.image-preview-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-}
-
-.image-preview-item .remove-btn {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: rgba(255, 0, 0, 0.8);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* 输入框 + 语音输入容器 */
-.input-container {
+.input-wrapper {
   display: flex;
-  align-items: center;
+  align-items: stretch; /* 让子元素高度一致 */
   width: 100%;
   background-color: #fff;
-  /* 可选：与上方的框背景一致 */
   border: 1px solid #ccc;
-  /* 可选：与上方的框边框一致 */
-  border-radius: 4px;
-  /* 可选：圆角与上方的框一致 */
-  padding: 8px;
-  /* 增加内边距，使内容不贴边 */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 #userInput {
-  height: 100px;
-  width: 100%;
-  padding: 10px;
-  font-size: 18px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: none;
-  /* 禁止调整大小 */
-  /*overflow: hidden; /* 隐藏滚动条 */
-  padding: 10px;
-  box-sizing: border-box;
-  /* caret-color: #000; 保持光标可见 */
   flex-grow: 1;
-  /* 让 textarea 尽可能占据剩余空间 */
+  height: 120px;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  resize: none;
+  background-color: transparent;
+  line-height: 1.5;
+}
+
+.input-actions-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 50px;
+  background-color: #f8f9fa;
+  border-left: 1px solid #eee;
+  padding: 5px 0;
+}
+
+.action-icon-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  /*width: 100%;*/
+}
+
+.action-icon-btn:hover {
+  color: #007bff;
+  background-color: #e9ecef;
+}
+
+.mic-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+}
+
+.microphone-icon {
+  width: 32px;
+  height: 32px;
+  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23555"%3E%3Cpath d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 2.79 3.28-3.44 6-6.26 6-2.79v-1h-1.7z"/%3E%3C/svg%3E');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+
+.microphone-icon.recording {
+  animation: mic-animation 0.5s infinite alternate;
+  filter: invert(30%) sepia(70%) saturate(600%) hue-rotate(130deg) brightness(100%) contrast(100%);
+}
+
+.stop-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #f44336;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.stop-button::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background-color: white;
 }
 
 

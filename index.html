@@ -46,21 +46,28 @@
       </div>
 
       <div id="imagePreviewContainer" class="image-preview-container hidden"></div>
-      <div class="input-container">
+      <div class="input-wrapper">
         <textarea id="userInput" placeholder="在这里输入内容..."></textarea>
-        <button id="clearButton">清空</button>
-        <label for="imageInput" class="image-upload-icon" title="上传图片">
-          <i class="fas fa-image"></i>
-        </label>
-        <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
-        
-        <label for="cameraInput" class="camera-icon" title="拍照">
-          <i class="fas fa-camera"></i>
-        </label>
-        <input type="file" id="cameraInput" capture="environment" accept="image/*" style="display: none;">
-        
-        <span id="microphoneButton" class="microphone-icon"></span>
-        <button id="stopButton" class="stop-button hidden"></button>
+        <div class="input-actions-sidebar">
+          <button id="clearButton" class="action-icon-btn" title="清空">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+          
+          <label for="imageInput" class="action-icon-btn" title="上传图片">
+            <i class="fas fa-image"></i>
+          </label>
+          <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
+          
+          <label for="cameraInput" class="action-icon-btn" title="拍照">
+            <i class="fas fa-camera"></i>
+          </label>
+          <input type="file" id="cameraInput" capture="environment" accept="image/*" style="display: none;">
+          
+          <div class="mic-container">
+            <span id="microphoneButton" class="microphone-icon"></span>
+            <button id="stopButton" class="stop-button hidden"></button>
+          </div>
+        </div>
       </div>
 
       <div>
