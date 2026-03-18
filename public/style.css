@@ -314,7 +314,7 @@ body {
   /* 白色正方形 */
 }
 
-.image-upload-icon {
+.image-upload-icon, .camera-icon {
   font-size: 24px;
   color: #007bff;
   cursor: pointer;
@@ -325,7 +325,7 @@ body {
   transition: color 0.3s;
 }
 
-.image-upload-icon:hover {
+.image-upload-icon:hover, .camera-icon:hover {
   color: #0056b3;
 }
 

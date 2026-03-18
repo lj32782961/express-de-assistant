@@ -644,9 +644,11 @@ userInput.addEventListener('keydown', (event) => {
 
 let selectedImages = [];
 const imageInput = document.getElementById('imageInput');
+const cameraInput = document.getElementById('cameraInput');
 const imagePreviewContainer = document.getElementById('imagePreviewContainer');
 
 imageInput.addEventListener('change', handleImageUpload);
+cameraInput.addEventListener('change', handleImageUpload);
 
 async function handleImageUpload(event) {
     const files = Array.from(event.target.files);
@@ -663,7 +665,7 @@ async function handleImageUpload(event) {
         });
     }
     renderImagePreviews();
-    imageInput.value = ''; // Reset input
+    event.target.value = ''; // Reset the input that triggered the event
 }
 
 function fileToBase64(file) {
