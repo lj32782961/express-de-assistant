@@ -87,18 +87,6 @@ body {
   margin-right: auto;
 }
 
-.message img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin-top: 10px;
-  display: block;
-}
-
-.sent-image {
-  max-width: 200px !important;
-  border: 1px solid #ddd;
-}
 
 /* 命令按钮网格布局 */
 #commandButtons {
@@ -443,7 +431,7 @@ body {
 }
 
 .image-preview-container {
-  display: flex;
+  /* display: flex; */
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px;
