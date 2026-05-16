@@ -27,13 +27,6 @@ body {
   max-width: 320px;
 }
 
-#defaultModelHint {
-  display: inline-block;
-  margin-left: 10px;
-  font-size: 12px;
-  opacity: 0.9;
-}
-
 #layoutContainer {
   display: flex;
   flex-direction: column;

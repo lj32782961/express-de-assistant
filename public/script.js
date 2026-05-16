@@ -128,14 +128,13 @@ let definedModel;
 // document.addEventListener('DOMContentLoaded', initializeModelSelector);
 function initializeModelSelector() {
     const modelSelector = document.getElementById('modelSelector');
-    const defaultModelHint = document.getElementById('defaultModelHint');
     const defaultModel = AVAILABLE_MODELS.find((model) => model.id === DEFAULT_MODEL_ID) || AVAILABLE_MODELS[0];
 
     modelSelector.innerHTML = '';
     AVAILABLE_MODELS.forEach((model) => {
         const option = document.createElement('option');
         option.value = model.id;
-        option.textContent = model.id === defaultModel.id ? `${model.label}（默认）` : model.label;
+        option.textContent = model.label;
         option.title = model.description;
         modelSelector.appendChild(option);
     });
@@ -151,10 +150,6 @@ function initializeModelSelector() {
     if (!savedModelExists) {
         localStorage.setItem(MODEL_STORAGE_KEY, initialModel);
     }
-    if (defaultModelHint) {
-        defaultModelHint.textContent = `默认：${defaultModel.label}`;
-    }
-
     // 监听下拉框的变化
     modelSelector.addEventListener('change', () => {
         const selectedModel = modelSelector.value;
