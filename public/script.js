@@ -7,8 +7,20 @@ let Schluessel;
 // let topK; //设置 Top-K (通常为正整数)
 
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
-const MODEL_GEMINI_2_FLASH = "gemini-3.1-flash-lite-preview";
-const MODEL_GEMINI_2_5_PRO_EXP_03_25 = "gemini-2.5-pro-exp-03-25";
+const MODEL_STORAGE_KEY = "selectedModel";
+const DEFAULT_MODEL_ID = "gemini-3.1-flash-lite-preview";
+const AVAILABLE_MODELS = [
+    {
+        id: "gemini-2.5-flash-lite",
+        label: "Gemini 2.5 Flash Lite",
+        description: "Gemini 2.5 Flash Lite"
+    },
+    {
+        id: "gemini-3.1-flash-lite-preview",
+        label: "Gemini 3.1 Flash Lite Preview",
+        description: "默认模型，适合大多数任务，兼顾性能和质量"
+    }
+];
 
 
 //gemini-2.0-flash-thinking-exp-01-21 ：这是 Gemini 2.0 Flash Thinking 模型背后的模型的最新预览版
@@ -116,30 +128,48 @@ let definedModel;
 // document.addEventListener('DOMContentLoaded', initializeModelSelector);
 function initializeModelSelector() {
     const modelSelector = document.getElementById('modelSelector');
-    const defaultModel = 'gemini-3.1-flash-lite-preview'; 
+    const defaultModelHint = document.getElementById('defaultModelHint');
+    const defaultModel = AVAILABLE_MODELS.find((model) => model.id === DEFAULT_MODEL_ID) || AVAILABLE_MODELS[0];
+
+    modelSelector.innerHTML = '';
+    AVAILABLE_MODELS.forEach((model) => {
+        const option = document.createElement('option');
+        option.value = model.id;
+        option.textContent = model.id === defaultModel.id ? `${model.label}（默认）` : model.label;
+        option.title = model.description;
+        modelSelector.appendChild(option);
+    });
 
     // 从 localStorage 中获取模型值
-    const savedModel = localStorage.getItem('selectedModel') || defaultModel;
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    const savedModelExists = AVAILABLE_MODELS.some((model) => model.id === savedModel);
+    const initialModel = savedModelExists ? savedModel : defaultModel.id;
     console.log('当前模型:', savedModel);
 
     // 设置下拉框的默认值
-    modelSelector.value = savedModel;
+    modelSelector.value = initialModel;
+    if (!savedModelExists) {
+        localStorage.setItem(MODEL_STORAGE_KEY, initialModel);
+    }
+    if (defaultModelHint) {
+        defaultModelHint.textContent = `默认：${defaultModel.label}`;
+    }
 
     // 监听下拉框的变化
     modelSelector.addEventListener('change', () => {
         const selectedModel = modelSelector.value;
-        localStorage.setItem('selectedModel', selectedModel); // 更新 localStorage
+        localStorage.setItem(MODEL_STORAGE_KEY, selectedModel); // 更新 localStorage
         console.log(`模型已切换，当前模型为：${selectedModel}`);
         definedModel = selectedModel; // 更新 definedModel
     });
 
     // 初始化时设置 definedModel
-    definedModel = savedModel;
+    definedModel = initialModel;
 
     // // 如果缓存被清空，恢复默认值
     // const clearButton = document.getElementById('clearButton');
     // clearButton.addEventListener('click', () => {
-    //     localStorage.removeItem('selectedModel'); // 清除模型设置
+    //     localStorage.removeItem(MODEL_STORAGE_KEY); // 清除模型设置
     //     modelSelector.value = defaultModel; // 恢复默认值
     //     console.log('缓存已清空，模型恢复为默认值。');
     // });
