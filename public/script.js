@@ -8,7 +8,7 @@ let Schluessel;
 
 import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
 const MODEL_STORAGE_KEY = "selectedModel";
-const DEFAULT_MODEL_ID = "gemini-3.1-flash-lite-preview";
+const DEFAULT_MODEL_ID = "gemini-3.1-flash-lite";
 const AVAILABLE_MODELS = [
     {
         id: "gemini-2.5-flash-lite",
@@ -16,8 +16,8 @@ const AVAILABLE_MODELS = [
         description: "Gemini 2.5 Flash Lite"
     },
     {
-        id: "gemini-3.1-flash-lite-preview",
-        label: "Gemini 3.1 Flash Lite Preview",
+        id: "gemini-3.1-flash-lite",
+        label: "Gemini 3.1 Flash Lite",
         description: "默认模型，适合大多数任务，兼顾性能和质量"
     }
 ];
@@ -59,7 +59,14 @@ async function loadSettings() {
             }
         });
         if (!response.ok) {
-            console.error('获取settings数据失败:', response.status, response.statusText);
+            let errorMessage = response.statusText;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (parseError) {
+                // 保留 statusText，避免错误响应不是 JSON 时再次抛错
+            }
+            console.error('获取settings数据失败:', response.status, errorMessage);
             sendButton.disabled = true;
             isSettingsLoaded = false;
             return; // 退出函数，不再尝试解析 JSON
